@@ -1,0 +1,33 @@
+<extends>index.html</extends>
+{% block title %}Home - MyShop{% endblock %}
+{% block content %}
+  <section class="hero">
+    <h1>Discover Great Products</h1>
+    <p>Simple, clean, and responsive starter for your e-commerce site.</p>
+  </section>
+
+  <section class="products">
+    <div class="grid">
+      <article class="product" data-id="1" data-price="29.99">
+        <img src="https://via.placeholder.com/320x200?text=Product+1" alt="Product 1">
+        <h3>Product One</h3>
+        <p class="price">$29.99</p>
+        <button class="add-to-cart btn">Add to cart</button>
+      </article>
+
+      <article class="product" data-id="2" data-price="49.99">
+        <img src="https://via.placeholder.com/320x200?text=Product+2" alt="Product 2">
+        <h3>Product Two</h3>
+        <p class="price">$49.99</p>
+        <button class="add-to-cart btn">Add to cart</button>
+      </article>
+
+      <article class="product" data-id="3" data-price="15.00">
+        <img src="https://via.placeholder.com/320x200?text=Product+3" alt="Product 3">
+        <h3>Product Three</h3>
+        <p class="price">$15.00</p>
+        <button class="add-to-cart btn">Add to cart</button>
+      </article>
+    </div>
+  </section>
+{% endblock %}
