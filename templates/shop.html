@@ -1,6 +1,18 @@
-<extends>index.html</extends>
-{% block title %}Home - MyShop{% endblock %}
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Shop - MyShop</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script src="../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+{% extends "base.html" %}
+{% block title %}Shop — MyShop{% endblock %}
 {% block content %}
+
   <section class="hero">
     <h1>Discover Great Products</h1>
     <p>Simple, clean, and responsive starter for your e-commerce site.</p>
@@ -30,4 +42,5 @@
       </article>
     </div>
   </section>
+
 {% endblock %}

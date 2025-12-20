@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   function renderCart(){
     const cart = loadCart();
+    if(!cartItemsEl || !cartCountEl || !cartTotalEl) return
     cartItemsEl.innerHTML = ''
     let total = 0
     cart.forEach(item=>{
@@ -88,9 +89,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
   })
 
   // open/close
-  cartBtn.addEventListener('click', ()=>{ cartModal.classList.remove('hidden'); cartModal.setAttribute('aria-hidden','false') })
-  closeCart.addEventListener('click', ()=>{ cartModal.classList.add('hidden'); cartModal.setAttribute('aria-hidden','true') })
-  clearCartBtn.addEventListener('click', ()=>{ clearCart() })
+  if (cartBtn) cartBtn.addEventListener('click', ()=>{ if (cartModal) { cartModal.classList.remove('hidden'); cartModal.setAttribute('aria-hidden','false') } })
+  if (closeCart) closeCart.addEventListener('click', ()=>{ if (cartModal) { cartModal.classList.add('hidden'); cartModal.setAttribute('aria-hidden','true') } })
+  if (clearCartBtn) clearCartBtn.addEventListener('click', ()=>{ clearCart() })
 
   // remove item by clicking price button
   cartItemsEl.addEventListener('click', e=>{
@@ -98,6 +99,35 @@ document.addEventListener('DOMContentLoaded', ()=>{
     if(removeId) removeFromCart(removeId)
   })
 
-  // init
-  renderCart()
+async function includeHTML() {
+  document.querySelectorAll('[data-include]').forEach(async el => {
+    const url = el.dataset.include;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(res.status);
+      el.innerHTML = await res.text();
+      initNavbar(el); // initialize event handlers inside inserted HTML
+    } catch (err) {
+      console.error('include failed', url, err);
+    }
+  });
+}
+
+function initNavbar(root = document) {
+  const navToggle = root.querySelector('#nav-toggle');
+  const navMenu = root.querySelector('#nav-menu');
+  if (!navToggle || !navMenu) return;
+
+  const openNav = () => { navToggle.classList.add('open'); navMenu.removeAttribute('hidden'); /* ... */ };
+  const closeNav = () => { navToggle.classList.remove('open'); navMenu.setAttribute('hidden',''); /* ... */ };
+
+  navToggle.addEventListener('click', e => { e.stopPropagation(); navMenu.classList.contains('open') ? closeNav() : openNav(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNav(); });
+}
+
+// initialize
+includeHTML();
+initNavbar();
+renderCart();
+
 })

@@ -1,62 +1,33 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title></title>
-  <link rel="stylesheet" href="/static/css/styles.css">
-  <script src="../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}Home — MyShop{% endblock %}
+{% block content %}
 
-<header>
-
-  <nav class="navbar navbar-expand-lg navbar-darjk bg-transparent">
-    <div class="container-fluid">
-      <button id="nav-toggle" class="hamburger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-menu">
-        <span class="hamburger-box"> 
-          <span class="hamburger-inner">
-          </span>
-        </span>
-      </button>
-
-      <!-- Navigation links (hidden on small screens) -->
-      <ul id="nav-menu" class="nav-menu" hidden>
-        <li><a href="/templates/profile.html">Profile</a></li>
-        <li><a href="/shop/">My Shop</a></li>
-        <li><a href="/shop/">Settings</a></li>
-      </ul>
-
-      <form class="d-flex" role="search">
-        <input class="form-control mb-2 me-2" type="search" placeholder="Search products..." aria-label="Search">
-        <button class="btn btn-outline-success" type="submit">Search</button>
-      </form>
-
-      <button id="cart-btn" class="cart-btn"> Cart (<span id="cart-count">0</span>)</button>
-    </div>
-  </nav>
-</header>
-
-
-  <main class="container">
-
-  </main>
-
-  <div id="cart-modal" class="cart-modal hidden" aria-hidden="true">
-    <div class="cart-panel">
-      <button id="close-cart" class="close-btn" aria-label="Close">×</button>
-      <h2>Your Cart</h2>
-      <ul id="cart-items"></ul>
-      <div class="cart-actions">
-        <strong>Total: $<span id="cart-total">0.00</span></strong>
-        <div>
-          <button id="clear-cart" class="btn">Clear</button>
-          <button id="checkout" class="btn primary">Checkout</button>
-        </div>
-      </div>
-    </div>
+  <div class="hero">
+    <p>hero</p>
   </div>
 
-  <script src="/static/js/main.js"></script>
-</body>
-</html>
+<div class="container my-4">
+  <div class="row grid-box  mb-3">
+    <div class="col text-center">Product1</div>
+    <div class="col text-center">Product2</div>
+    <div class="col text-center">Product3</div>
+  </div>
+
+  <div class="row grid-box mb-3">
+    <div class="col text-center">Product1</div>
+    <div class="col text-center">Product2</div>
+    <div class="col text-center">Product3</div>
+  </div>
+
+  <div class="row grid-box">
+    <div class="col text-center">Product1</div>
+    <div class="col text-center">Product2</div>
+    <div class="col text-center">Product3</div>
+  </div>
+</div>
+
+<div class ="shop-btn text-center">
+  <a href="/shop/" class="btn btn-outline-secondary" role="button" aria-disabled="true">Shop Now</a>
+</div>
+
+{% endblock %}

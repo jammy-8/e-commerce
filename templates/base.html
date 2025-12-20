@@ -1,0 +1,43 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}MyShop{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+  <header>
+    {% include "components/navbar.html" %}
+  </header>
+
+  <!-- cart modal available on all pages -->
+  <div id="cart-modal" class="cart-modal hidden" aria-hidden="true">
+    <div class="cart-panel">
+      <button id="close-cart" class="close-btn" aria-label="Close">×</button>
+      <h2>Your Cart</h2>
+      <ul id="cart-items"></ul>
+      <div class="cart-actions">
+        <strong>Total: $<span id="cart-total">0.00</span></strong>
+        <div>
+          <button id="clear-cart" class="btn">Clear</button>
+          <button id="checkout" class="btn primary">Checkout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="bg-dark text-light">
+    <div class="text-center">
+      <small>© 2025 YourWebsiteName. Powered and secured by Bootstrap</small>
+    </div>
+  </footer>
+
+  <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>
