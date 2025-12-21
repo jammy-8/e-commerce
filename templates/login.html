@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Login - MyShop{% endblock %}
+
+{% block content %}
+<div class="login-wrapper">
+  <div class="login-panel">
+    <h2>Sign in</h2>
+    {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}
+          <li class="message {{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <form method="post" action="{% url 'login' %}" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.GET.next }}">
+
+      <div class="form-group">
+        <label for="id_username">Username</label>
+        <input id="id_username" name="username" class="form-control" required autofocus>
+      </div>
+
+      <div class="form-group">
+        <label for="id_password">Password</label>
+        <input id="id_password" type="password" name="password" class="form-control" required>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn primary">Sign in</button>
+        <a href="{% url 'index' %}" class="btn">Cancel</a>
+      </div>
+    </form>
+
+    <p class="mt-2">Don't have an account? <a href="/signup/">Sign up</a></p>
+  </div>
+</div>
+{% endblock %}

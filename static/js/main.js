@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   function openNav(){
     if(!navToggle || !navMenu) return
+    console.log('[NAV] openNav called')
     navToggle.classList.add('open')
     navToggle.setAttribute('aria-expanded','true')
     navMenu.classList.add('open')
@@ -24,6 +25,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   function closeNav(){
     if(!navToggle || !navMenu) return
+    console.log('[NAV] closeNav called')
     navToggle.classList.remove('open')
     navToggle.setAttribute('aria-expanded','false')
     navMenu.classList.remove('open')
@@ -35,6 +37,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   if(navToggle && navMenu){
     navToggle.addEventListener('click', (e)=>{
       e.stopPropagation()
+      console.log('[NAV] navToggle clicked', navToggle, 'menu open?', navMenu.classList.contains('open'))
       if(!navMenu.classList.contains('open')) openNav(); else closeNav()
     })
 
@@ -45,6 +48,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
     document.addEventListener('keydown', (e)=>{
       if(e.key === 'Escape') closeNav()
     })
+
+    // mark as initialized to avoid duplicate listeners when initNavbar runs
+    navToggle.dataset.navInited = 'true'
   }
 
   function loadCart(){
@@ -117,12 +123,31 @@ function initNavbar(root = document) {
   const navToggle = root.querySelector('#nav-toggle');
   const navMenu = root.querySelector('#nav-menu');
   if (!navToggle || !navMenu) return;
+  if (navToggle.dataset.navInited) return; // avoid adding duplicate listeners
 
-  const openNav = () => { navToggle.classList.add('open'); navMenu.removeAttribute('hidden'); /* ... */ };
-  const closeNav = () => { navToggle.classList.remove('open'); navMenu.setAttribute('hidden',''); /* ... */ };
+  const openNav = () => {
+    navToggle.classList.add('open');
+    navToggle.setAttribute('aria-expanded','true');
+    navMenu.classList.add('open');
+    navMenu.removeAttribute('hidden');
+    navMenu.setAttribute('aria-hidden','false');
+    document.documentElement.style.overflow = 'hidden';
+  };
+
+  const closeNav = () => {
+    navToggle.classList.remove('open');
+    navToggle.setAttribute('aria-expanded','false');
+    navMenu.classList.remove('open');
+    navMenu.setAttribute('aria-hidden','true');
+    navMenu.setAttribute('hidden','');
+    document.documentElement.style.overflow = '';
+  };
 
   navToggle.addEventListener('click', e => { e.stopPropagation(); navMenu.classList.contains('open') ? closeNav() : openNav(); });
+  navMenu.addEventListener('click', (e) => { if (e.target.tagName === 'A') closeNav(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNav(); });
+
+  navToggle.dataset.navInited = 'true';
 }
 
 // initialize

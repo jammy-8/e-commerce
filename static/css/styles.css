@@ -518,6 +518,22 @@ button:focus:not(:focus-visible) {
 input,
 button,
 select,
+
+/* login panel */
+.login-wrapper{display:flex;justify-content:center;padding:2rem 1rem}
+.login-panel{width:100%;max-width:420px;background:#fff;padding:1.5rem;border-radius:6px;box-shadow:0 6px 20px rgba(0,0,0,0.08)}
+.login-panel h2{margin-top:0;margin-bottom:1rem}
+.login-panel .form-group{margin-bottom:0.75rem}
+.login-panel .form-control{width:100%;padding:0.5rem;border:1px solid #ddd;border-radius:4px}
+.login-panel .form-actions{display:flex;gap:0.5rem;align-items:center;margin-top:0.75rem}
+.messages{list-style:none;padding:0;margin:0 0 0.75rem 0}
+.message{padding:0.5rem;border-radius:4px}
+.message.error{background:#fff1f0;border:1px solid #ffd1d1;color:#7a1a1a}
+.message.success{background:#f0fff4;border:1px solid #c8ffc9;color:#0b5d2e}
+
+input,
+button,
+select,
 optgroup,
 textarea {
   margin: 0;
