@@ -164,6 +164,9 @@ renderCart();
   const passInput = document.getElementById('id_password');
   const popup = document.getElementById('login-error-popup');
 
+  // only attach validation on actual login forms that have both username and password inputs
+  if(!userInput || !passInput) return;
+
   let autoHideTimer = null;
 
   function showPopup(msg){

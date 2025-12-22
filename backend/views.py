@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
+from django.contrib.auth.forms import UserCreationForm
 
 
 def index(request):
@@ -34,6 +35,28 @@ def logout_view(request):
     logout(request)
     messages.info(request, 'You have been logged out.')
     return redirect('index')
+
+
+def signup_view(request):
+    if request.user.is_authenticated:
+        return redirect('index')
+
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            username = form.cleaned_data.get('username')
+            raw_password = form.cleaned_data.get('password1')
+            user = authenticate(username=username, password=raw_password)
+            login(request, user)
+            messages.success(request, 'Account created successfully. Welcome!')
+            return redirect('index')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = UserCreationForm()
+
+    return render(request, 'signup.html', {'form': form})
 
 
 def custom_404_view(request, exception):

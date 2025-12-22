@@ -29,6 +29,19 @@
     </div>
   </div>
 
+  <!-- {% if messages %}
+    <div class="container mt-2">
+      <div class="messages">
+        {% for message in messages %}
+          <li class="message {{ message.tags }}">{{ message }}</li>
+          <div class="form-popup" role="alert" aria-hidden="true" aria-live="assertive" tabindex="-1">
+            <div class="message {{ message.tags }}"> {{ message }} </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %} -->
+
   <main>
     {% block content %}{% endblock %}
   </main>
