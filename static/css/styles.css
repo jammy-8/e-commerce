@@ -12382,3 +12382,39 @@ footer {
   background: #fff;
   box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
+
+.form-popup {
+  position: fixed;
+  left: 50%;
+  top: 15%;
+  transform: translateX(-50%) translateY(-8px);
+  background: var(--bs-body-bg);
+  color: var(--bs-body-color);
+  border: 1px solid rgba(0,0,0,0.08);
+  padding: 1rem 1.25rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  z-index: 9999;
+  min-width: 260px;
+  max-width: calc(100% - 2rem);
+  text-align: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+  pointer-events: none;
+}
+
+.form-popup.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.form-popup.hidden { display: none; }
+
+.form-popup .popup-content {
+  font-weight: 600;
+  color: var(--bs-danger-text-emphasis, #d9534f);
+}
+

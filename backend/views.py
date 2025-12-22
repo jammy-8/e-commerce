@@ -34,3 +34,8 @@ def logout_view(request):
     logout(request)
     messages.info(request, 'You have been logged out.')
     return redirect('index')
+
+
+def custom_404_view(request, exception):
+    """Custom 404 page handler."""
+    return render(request, '404.html', status=404)

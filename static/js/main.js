@@ -155,4 +155,58 @@ includeHTML();
 initNavbar();
 renderCart();
 
+// login form validation popup
+(function initLoginValidation(){
+  const loginWrapper = document.querySelector('.login-wrapper');
+  if(!loginWrapper) return;
+  const form = loginWrapper.querySelector('form');
+  const userInput = document.getElementById('id_username');
+  const passInput = document.getElementById('id_password');
+  const popup = document.getElementById('login-error-popup');
+
+  let autoHideTimer = null;
+
+  function showPopup(msg){
+    if(!popup) { alert(msg); return; }
+    popup.querySelector('.popup-content').textContent = msg;
+    // make visible with transition
+    popup.classList.remove('hidden');
+    // allow next tick for transition
+    requestAnimationFrame(()=> popup.classList.add('visible'));
+    popup.setAttribute('aria-hidden','false');
+    popup.focus && popup.focus();
+    document.addEventListener('keydown', onKeyDown);
+    // auto-hide after 4 seconds
+    clearTimeout(autoHideTimer);
+    autoHideTimer = setTimeout(hidePopup, 4000);
+  }
+
+  function hidePopup(){
+    if(!popup) return;
+    clearTimeout(autoHideTimer);
+    popup.classList.remove('visible');
+    popup.setAttribute('aria-hidden','true');
+    document.removeEventListener('keydown', onKeyDown);
+    // after transition ends, add hidden to remove from flow
+    setTimeout(()=>{
+      if(!popup.classList.contains('visible')) popup.classList.add('hidden');
+    }, 350);
+  }
+
+  function onKeyDown(e){ if(e.key === 'Escape') hidePopup(); }
+
+  if(popup) popup.addEventListener('click', e => { if(e.target === popup) hidePopup(); });
+
+  if(form){
+    form.addEventListener('submit', function(e){
+      const u = userInput && userInput.value.trim();
+      const p = passInput && passInput.value.trim();
+      if(!u || !p){
+        e.preventDefault();
+        showPopup('requires username or password');
+      }
+    });
+  }
+})();
+
 })
