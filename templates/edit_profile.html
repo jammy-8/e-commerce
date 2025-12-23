@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Profile — MyShop{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Edit Profile</h2>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}" role="alert">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="id_username" class="form-label">Username</label>
+      {{ form.username }}
+    </div>
+    <div class="mb-3">
+      <label for="id_email" class="form-label">Email (optional)</label>
+      {{ form.email }}
+    </div>
+    <hr />
+    <div class="mb-3">
+      <label for="id_password1" class="form-label">New password</label>
+      {{ form.password1 }}
+    </div>
+    <div class="mb-3">
+      <label for="id_password2" class="form-label">Confirm new password</label>
+      {{ form.password2 }}
+    </div>
+
+    <button type="submit" name="save_profile" class="btn btn-primary">Save changes</button>
+    <a href="/" class="btn btn-secondary ms-2">Cancel</a>
+  </form>
+
+  <hr />
+  <h3>Your products</h3>
+  {% if products %}
+    <ul class="list-group mb-3">
+      {% for p in products %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            {% if p.product_name %}
+              <strong>{{ p.product_name }}</strong>
+            {% else %}
+              <strong>Product {{ p.product_id }}</strong>
+            {% endif %}
+            <span class="ms-3"><strong>Price:</strong> {{ p.product_price }}</span>
+          </div>
+
+          <div>
+            <form method="post" style="display:inline; margin-right:.5rem;">
+              {% csrf_token %}
+              <input type="hidden" name="delete_product" value="{{ p.product_id }}">
+              <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+            </form>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No products yet.</p>
+  {% endif %}
+
+  <h3>Add product</h3>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="id_product_name" class="form-label">Name</label>
+      {{ product_form.product_name }}
+    </div>
+    <div class="mb-3">
+      <label for="id_product_price" class="form-label">Price</label>
+      {{ product_form.product_price }}
+    </div>
+    <div class="mb-3">
+      <label for="id_product_image" class="form-label">Image (optional)</label>
+      {{ product_form.product_image }}
+    </div>
+    <button type="submit" name="add_product" class="btn btn-success">Add product</button>
+  </form>
+</div>
+{% endblock %}

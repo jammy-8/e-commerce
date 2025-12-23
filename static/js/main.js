@@ -212,4 +212,8 @@ renderCart();
   }
 })();
 
+function productsomething() {
+  
+}
+
 })

@@ -24,7 +24,7 @@
 
 
       {% if user.is_authenticated %}
-        <span class="me-2">Hi, {{ user.username }}</span>
+        <a href="{% url 'edit_profile' %}" class="me-2">Hi, {{ user.username }}</a>
         <a href="{% url 'logout' %}" class="btn">Logout</a>
       {% else %}
         <a href="{% url 'login' %}" class="login-btn me-2">Login</a>
