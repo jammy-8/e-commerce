@@ -11,14 +11,32 @@ document.addEventListener('DOMContentLoaded', ()=>{
   // Navigation (hamburger / side menu)
   const navToggle = document.getElementById('nav-toggle')
   const navMenu = document.getElementById('nav-menu')
+  // internal state for transition handling
+  let _navCloseTimeout = null
+  function _onNavTransitionEnd(e){
+    if(!navMenu) return
+    if(e.target !== navMenu) return
+    // only hide when we're closing (i.e., open class is NOT present)
+    if(navMenu.classList.contains('open')) return
+    navMenu.setAttribute('hidden','')
+    navMenu.removeEventListener('transitionend', _onNavTransitionEnd)
+    if(_navCloseTimeout){ clearTimeout(_navCloseTimeout); _navCloseTimeout = null }
+  }
 
   function openNav(){
     if(!navToggle || !navMenu) return
     console.log('[NAV] openNav called')
+    // ensure any pending close cleanup is cleared
+    if(_navCloseTimeout){ clearTimeout(_navCloseTimeout); _navCloseTimeout = null }
+    navMenu.removeEventListener('transitionend', _onNavTransitionEnd)
+
     navToggle.classList.add('open')
     navToggle.setAttribute('aria-expanded','true')
-    navMenu.classList.add('open')
+    // make visible, force reflow, then add open class to trigger transition
     navMenu.removeAttribute('hidden')
+    // force reflow so transition always runs
+    void navMenu.offsetWidth
+    navMenu.classList.add('open')
     navMenu.setAttribute('aria-hidden','false')
     document.documentElement.style.overflow = 'hidden'
   }
@@ -28,10 +46,18 @@ document.addEventListener('DOMContentLoaded', ()=>{
     console.log('[NAV] closeNav called')
     navToggle.classList.remove('open')
     navToggle.setAttribute('aria-expanded','false')
+    // start closing animation
     navMenu.classList.remove('open')
     navMenu.setAttribute('aria-hidden','true')
-    navMenu.setAttribute('hidden','')
     document.documentElement.style.overflow = ''
+    // wait for transition to finish before setting hidden to preserve animation
+    navMenu.addEventListener('transitionend', _onNavTransitionEnd)
+    // fallback in case transitionend doesn't fire
+    _navCloseTimeout = setTimeout(()=>{
+      try{ if(navMenu && !navMenu.classList.contains('open')) navMenu.setAttribute('hidden','') }catch(e){}
+      if(navMenu) navMenu.removeEventListener('transitionend', _onNavTransitionEnd)
+      _navCloseTimeout = null
+    }, 350)
   }
 
   if(navToggle && navMenu){

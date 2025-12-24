@@ -8,9 +8,62 @@ from .models import UserProduct
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 
+# Image processing for product images (resize larger images server-side)
+import base64
+from io import BytesIO
+try:
+    from PIL import Image
+    _PIL_AVAILABLE = True
+except Exception:
+    Image = None
+    _PIL_AVAILABLE = False
+
+
+def _process_image(binary, max_width=640, max_height=480):
+    """Return a data URL for the image, resizing it if larger than the provided dimensions.
+    If Pillow is not available, returns the original image as base64 if possible."""
+    if not binary:
+        return None
+    try:
+        if not _PIL_AVAILABLE:
+            return 'data:image/png;base64,' + base64.b64encode(binary).decode('ascii')
+        img = Image.open(BytesIO(binary))
+        # Convert to RGB/RGBA to avoid mode issues when saving
+        if img.mode not in ("RGB", "RGBA"):
+            img = img.convert("RGBA")
+        w, h = img.size
+        if w > max_width or h > max_height:
+            try:
+                resample = Image.Resampling.LANCZOS
+            except AttributeError:
+                resample = Image.ANTIALIAS
+            img.thumbnail((max_width, max_height), resample)
+        out = BytesIO()
+        img.save(out, format='PNG')
+        out.seek(0)
+        return 'data:image/png;base64,' + base64.b64encode(out.read()).decode('ascii')
+    except Exception:
+        # Fallback to returning the raw image if something goes wrong
+        try:
+            return 'data:image/png;base64,' + base64.b64encode(binary).decode('ascii')
+        except Exception:
+            return None
+
 
 def index(request):
-    return render(request, 'index.html')
+    # Load up to 6 products for the home page (preview / featured)
+    import base64
+    prods = UserProduct.objects.all()[:6]
+    products = []
+    for p in prods:
+        img = _process_image(p.product_image, max_width=640, max_height=480)
+        products.append({
+            'id': p.product_id,
+            'name': p.product_name or f'Product {p.product_id}',
+            'price': p.product_price,
+            'image': img,
+        })
+    return render(request, 'index.html', {'products': products})
 
 
 import base64
@@ -20,12 +73,7 @@ def shop(request):
     prods = UserProduct.objects.all()
     products = []
     for p in prods:
-        img = None
-        if p.product_image:
-            try:
-                img = 'data:image/png;base64,' + base64.b64encode(p.product_image).decode('ascii')
-            except Exception:
-                img = None
+        img = _process_image(p.product_image, max_width=640, max_height=480)
         products.append({
             'id': p.product_id,
             'name': p.product_name or f'Product {p.product_id}',

@@ -2,28 +2,33 @@
 {% block title %}Home — MyShop{% endblock %}
 {% block content %}
 
-  <div class="hero">
-    <p>hero</p>
+<section class="hero d-flex align-items-center justify-content-center">
+  <div class="container-fluid text-center text-white py-5">
+    <h1 class="hero-outline display-4 fw-bold">Beauty Made Simple</h1>
+    <!-- <p class="lead">Your one-stop shop for all your needs.</p> -->
   </div>
+</section>
 
 <div class="container my-4">
-  <div class="row grid-box  mb-3">
-    <div class="col text-center">Product1</div>
-    <div class="col text-center">Product2</div>
-    <div class="col text-center">Product3</div>
-  </div>
-
-  <div class="row grid-box mb-3">
-    <div class="col text-center">Product1</div>
-    <div class="col text-center">Product2</div>
-    <div class="col text-center">Product3</div>
-  </div>
-
-  <div class="row grid-box">
-    <div class="col text-center">Product1</div>
-    <div class="col text-center">Product2</div>
-    <div class="col text-center">Product3</div>
-  </div>
+  <section class="products">
+    <h2 class="text-center mb-3">Featured Products</h2>
+    <div class="row">
+      {% for p in products %}
+        <div class="col-md-4 mb-3">
+          <article class="product text-center" data-id="{{ p.id }}">
+            {% if p.image %}
+              <img src="{{ p.image }}" alt="{{ p.name }}" class="img-fluid">
+            {% else %}
+              <img src="https://via.placeholder.com/320x200?text={{ p.name|urlencode }}" alt="{{ p.name }}" class="img-fluid">
+            {% endif %}
+            <h3 class="h5 mt-2">{{ p.name }}</h3>
+          </article>
+        </div>
+      {% empty %}
+        <p class="text-center">No products available yet.</p>
+      {% endfor %}
+    </div>
+  </section>
 </div>
 
 <div class ="shop-btn text-center">
