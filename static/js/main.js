@@ -53,35 +53,78 @@ document.addEventListener('DOMContentLoaded', ()=>{
     navToggle.dataset.navInited = 'true'
   }
 
+  // indicate whether we're showing/storing the cart locally or using the server
+  let cartSource = 'local'
+
+  function getCSRF(){ const v = document.cookie.match('(^|;)\\s*csrftoken\\s*=\\s*([^;]+)'); return v ? v.pop() : '' }
+
   function loadCart(){
     try{ return JSON.parse(localStorage.getItem(cartKey))||[] }catch(e){return[]}
   }
-  function saveCart(cart){ localStorage.setItem(cartKey, JSON.stringify(cart)); renderCart() }
+  function saveCart(cart){ localStorage.setItem(cartKey, JSON.stringify(cart)); renderCartFromList(cart) }
 
   function addToCart(id, title, price){
+    // local update
     const cart = loadCart()
     const found = cart.find(i=>i.id===id)
     if(found){ found.qty += 1 } else { cart.push({id,title,price,qty:1}) }
     saveCart(cart)
+
+    // if we're using server-backed cart, push the full cart to server
+    if(cartSource === 'server'){
+      fetch('/api/cart/sync/', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRF() }, body: JSON.stringify({cart}) }).catch(()=>{})
+    }
   }
 
-  function removeFromCart(id){ const cart = loadCart().filter(i=>i.id!==id); saveCart(cart) }
-  function clearCart(){ localStorage.removeItem(cartKey); renderCart() }
+  async function removeFromCart(id){
+    if(cartSource === 'server'){
+      try{
+        const res = await fetch('/api/cart/')
+        if(!res.ok) return
+        const data = await res.json()
+        const newCart = data.cart.filter(i=>String(i.id)!==String(id))
+        await fetch('/api/cart/sync/', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRF() }, body: JSON.stringify({cart: newCart}) })
+        renderCartFromList(newCart)
+      }catch(e){ console.error(e) }
+    } else {
+      const cart = loadCart().filter(i=>i.id!==id); saveCart(cart)
+    }
+  }
 
-  function renderCart(){
-    const cart = loadCart();
+  function clearCart(){ localStorage.removeItem(cartKey); renderCart(); if(cartSource === 'server'){ fetch('/api/cart/sync/', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRF() }, body: JSON.stringify({cart: []}) }).catch(()=>{}) } }
+
+  function renderCartFromList(cart){
     if(!cartItemsEl || !cartCountEl || !cartTotalEl) return
     cartItemsEl.innerHTML = ''
     let total = 0
     cart.forEach(item=>{
       total += item.price * item.qty
       const li = document.createElement('li')
-      li.innerHTML = `<span>${item.title} × ${item.qty}</span><button class="btn" data-remove="${item.id}">$${(item.price*item.qty).toFixed(2)}</button>`
+      li.innerHTML = `<span>${item.title} × ${item.qty}</span><button class=\"btn\" data-remove=\"${item.id}\">$${(item.price*item.qty).toFixed(2)}</button>`
       cartItemsEl.appendChild(li)
     })
     cartCountEl.textContent = cart.reduce((s,i)=>s+i.qty,0)
     cartTotalEl.textContent = total.toFixed(2)
   }
+
+  function renderCart(){ renderCartFromList(loadCart()) }
+
+  // Attempt to sync cart to server (works only when the user is authenticated)
+  (function trySyncCart(){
+    const cart = loadCart()
+    if(!cart || !cart.length) return
+    // send but don't block UI
+    try{
+      fetch('/api/cart/sync/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCSRF()
+        },
+        body: JSON.stringify({cart})
+      }).catch(()=>{})
+    }catch(e){/* ignore */}
+  })();
 
   // product buttons
   document.querySelectorAll('.product').forEach(prod => {
@@ -98,6 +141,10 @@ document.addEventListener('DOMContentLoaded', ()=>{
   if (cartBtn) cartBtn.addEventListener('click', ()=>{ if (cartModal) { cartModal.classList.remove('hidden'); cartModal.setAttribute('aria-hidden','false') } })
   if (closeCart) closeCart.addEventListener('click', ()=>{ if (cartModal) { cartModal.classList.add('hidden'); cartModal.setAttribute('aria-hidden','true') } })
   if (clearCartBtn) clearCartBtn.addEventListener('click', ()=>{ clearCart() })
+
+  // Checkout button in the cart modal should open the checkout page
+  const checkoutBtn = document.getElementById('checkout')
+  if (checkoutBtn) checkoutBtn.addEventListener('click', ()=>{ window.location.href = '/checkout/' })
 
   // remove item by clicking price button
   cartItemsEl.addEventListener('click', e=>{
@@ -155,14 +202,13 @@ includeHTML();
 initNavbar();
 renderCart();
 
-// login form validation popup
-(function initLoginValidation(){
-  const loginWrapper = document.querySelector('.login-wrapper');
-  if(!loginWrapper) return;
+
+
   const form = loginWrapper.querySelector('form');
   const userInput = document.getElementById('id_username');
   const passInput = document.getElementById('id_password');
   const popup = document.getElementById('login-error-popup');
+  if(!loginWrapper) return;
 
   // only attach validation on actual login forms that have both username and password inputs
   if(!userInput || !passInput) return;
@@ -210,10 +256,6 @@ renderCart();
       }
     });
   }
-})();
-
-function productsomething() {
-  
-}
-
 })
+
+

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Order received - MyShop{% endblock %}
+
+{% block content %}
+<section class="container">
+  <h1>Thank you! Your order is received ✅</h1>
+  {% if order %}
+    <p>Order ID: <strong>{{ order.id }}</strong></p>
+    <h2>Customer</h2>
+    <ul>
+      <li>Name: {{ order.customer.name }}</li>
+      <li>Email: {{ order.customer.email }}</li>
+      {% if order.customer.phone %}<li>Phone: {{ order.customer.phone }}</li>{% endif %}
+      <li>Address: {{ order.customer.address }}{% if order.customer.city %}, {{ order.customer.city }}{% endif %}</li>
+    </ul>
+
+    <h2>Items</h2>
+    <ul>
+      {% for item in order.cart %}
+        <li>{{ item.title }} × {{ item.qty }} — ${{ item.price|floatformat:2 }}</li>
+      {% endfor %}
+    </ul>
+
+    <p><strong>Total:</strong> ${{ order.total|floatformat:2 }}</p>
+  {% else %}
+    <p>We couldn't find your recent order in the session — if you just placed it, it may have expired. If you need help, contact support.</p>
+  {% endif %}
+
+  <p><a href="/">Return to shop</a></p>
+</section>
+{% endblock %}

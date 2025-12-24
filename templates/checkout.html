@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout - MyShop{% endblock %}
+
+{% block content %}
+<section class="container checkout">
+  <h1>Checkout</h1>
+  <div class="checkout-grid">
+    <form id="checkout-form" class="checkout-form" method="post">
+      {% csrf_token %}
+      <h2>Shipping details</h2>
+      <label for="name">Full name</label>
+      <input id="name" name="name" required>
+
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" required>
+
+      <label for="phone">Phone</label>
+      <input id="phone" name="phone">
+
+      <label for="address">Address</label>
+      <input id="address" name="address" required>
+
+      <label for="city">City</label>
+      <input id="city" name="city">
+
+      <label for="postcode">Postal code</label>
+      <input id="postcode" name="postcode">
+
+      <label for="country">Country</label>
+      <input id="country" name="country">
+
+      <button type="submit" class="btn primary">Place order</button>
+      <div id="checkout-msg" role="status" aria-live="polite" style="margin-top:12px"></div>
+    </form>
+
+    <div class="order-summary">
+      <h2>Your order</h2>
+      <ul id="checkout-items"></ul>
+      <div class="summary-total">Total: $<span id="checkout-total">0.00</span></div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+  const cartKey = 'myshop_cart_v1'
+  function loadCart(){ try{ return JSON.parse(localStorage.getItem(cartKey))||[] }catch(e){return[]} }
+
+  function renderCart(){
+    const cart = loadCart()
+    const itemsEl = document.getElementById('checkout-items')
+    const totalEl = document.getElementById('checkout-total')
+    itemsEl.innerHTML = ''
+    let total = 0
+    cart.forEach(it=>{
+      const li = document.createElement('li')
+      li.textContent = `${it.title} × ${it.qty} — $${(it.price*it.qty).toFixed(2)}`
+      itemsEl.appendChild(li)
+      total += it.price * it.qty
+    })
+    totalEl.textContent = total.toFixed(2)
+    return {cart, total}
+  }
+
+  function getCookie(name){
+    const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)')
+    return v ? v.pop() : ''
+  }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const result = renderCart()
+    const form = document.getElementById('checkout-form')
+    const msg = document.getElementById('checkout-msg')
+    if(!form) return
+
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault()
+      msg.textContent = ''
+      const name = document.getElementById('name').value.trim()
+      const email = document.getElementById('email').value.trim()
+      const phone = document.getElementById('phone').value.trim()
+      const address = document.getElementById('address').value.trim()
+      const city = document.getElementById('city').value.trim()
+      const postcode = document.getElementById('postcode').value.trim()
+      const country = document.getElementById('country').value.trim()
+
+      if(!name || !email || !address){ msg.textContent = 'Please provide name, email and address.'; return }
+      const payload = {
+        cart: result.cart,
+        customer: {name, email, phone, address, city, postcode, country}
+      }
+
+      msg.textContent = 'Placing order...'
+      try{
+        const res = await fetch('/checkout/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify(payload)
+        })
+        const data = await res.json()
+        if(data.ok){
+          // clear local cart and redirect to success page
+          localStorage.removeItem(cartKey)
+          window.location.href = '/checkout/success/'
+        } else {
+          msg.textContent = data.error || 'Failed to place order.'
+        }
+      }catch(err){
+        msg.textContent = 'Network error while placing order.'
+        console.error(err)
+      }
+    })
+  })
+})()
+</script>
+
+{% endblock %}
