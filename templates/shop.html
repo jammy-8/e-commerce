@@ -5,9 +5,8 @@
 
 {% block content %}
 
-  <section class="hero">
-    <h1>Discover Great Products</h1>
-    <p>Simple, clean, and responsive starter for your e-commerce site.</p>
+  <section class="hero d-flex align-items-center justify-content-center">
+    <h1 class="hero-outline display-4 fw-bold">Discover Great Products</h1>
   </section>
 
   <section class="products">
@@ -21,12 +20,25 @@
           {% endif %}
           <h3>{{ p.name }}</h3>
           <p class="price">${{ p.price }}</p>
-          <button class="add-to-cart btn">Add to cart</button>
+          <form method="post" class="add-to-cart-form">
+            {% csrf_token %}
+            <input type="hidden" name="product_id" value="{{ p.id }}">
+            <input type="hidden" name="product_name" value="{{ p.name }}">
+            <input type="hidden" name="product_price" value="{{ p.price }}">
+          <button id="openDialogBtn" class="add-to-cart" >Add to cart</button>
         </article>
       {% empty %}
         <p>No products available yet.</p>
       {% endfor %}
+      <dialog id="myDialog" class="myDialog">
+        <div class="dialogBox">
+            <button id="closeDialogBtn" class="close-btn">&times;</button>
+            <p>Item Added to your Cart!</p>
+        </div>
+      </dialog>
+    </form>
     </div>
+
   </section>
 
 {% endblock %}

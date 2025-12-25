@@ -8,15 +8,15 @@
   <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 
 </head>
-<body>
+<body data-is-auth="{% if request.user.is_authenticated %}true{% else %}false{% endif %}">
   <header>
     {% include "components/navbar.html" %}
   </header>
 
   <!-- cart modal available on all pages -->
-  <div id="cart-modal" class="cart-modal hidden" aria-hidden="true">
+  <!-- <div id="cart-modal" class="cart-modal hidden" aria-hidden="true">
     <div class="cart-panel">
-      <button id="close-cart" class="close-btn" aria-label="Close">×</button>
+      <button href="checkout.html" id="close-cart" class="close-btn" aria-label="Close">×</button>
       <h2>Your Cart</h2>
       <ul id="cart-items"></ul>
       <div class="cart-actions">
@@ -28,17 +28,17 @@
       </div>
     </div>
   </div>
-  
+   -->
   <main>
     {% block content %}{% endblock %}
   </main>
 
   <footer class="bg-dark text-light">
     <div class="text-center">
-      <small>© 2025 YourWebsiteName. Powered and secured by Bootstrap</small>
+      <small>© 2025 Beauté. Powered and secured by Bootstrap</small>
     </div>
   </footer>
 
   <script src="{% static 'js/main.js' %}"></script>
 </body>
-</html>
+</html> 

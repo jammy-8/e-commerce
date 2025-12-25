@@ -4,13 +4,17 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
-from .models import UserProduct
+from .models import UserProduct, UserCart
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
-
-# Image processing for product images (resize larger images server-side)
+from django.db.models import Sum, Max
+import json
+import time
+from django.http import JsonResponse
 import base64
 from io import BytesIO
+
+# Image processing for product images (resize larger images server-side)
 try:
     from PIL import Image
     _PIL_AVAILABLE = True
@@ -52,7 +56,6 @@ def _process_image(binary, max_width=640, max_height=480):
 
 def index(request):
     # Load up to 6 products for the home page (preview / featured)
-    import base64
     prods = UserProduct.objects.all()[:6]
     products = []
     for p in prods:
@@ -66,7 +69,7 @@ def index(request):
     return render(request, 'index.html', {'products': products})
 
 
-import base64
+
 
 def shop(request):
     # Load products from the existing user_products table and prepare them for the template
@@ -222,20 +225,28 @@ def custom_404_view(request, exception):
     return render(request, '404.html', status=404)
 
 
-# Checkout views
-import json
-import time
-from django.http import JsonResponse
+def add_to_cart(request):
+    if request.method == 'POST':
+        product_id = request.POST.get('product_id')
+        product_price = request.POST.get('product_price')
 
+        if request.user.is_authenticated:
+            user_cart, created = UserCart.objects.get_or_create(
+                user=request.user,
+                product_id=product_id,
+                defaults={'product_price': product_price, 'qty': 1}
+            )
+            if not created:
+                user_cart.qty += 1
+                user_cart.save()
+                console.log('Updated quantity for product_id:', product_id)
+
+            return redirect('/shop')
 
 def checkout(request):
-    """Render checkout page (GET) and accept order submissions (POST, JSON).
-    Stores a minimal order structure in the session at 'last_order' and returns JSON.
-    """
     if request.method == 'GET':
         return render(request, 'checkout.html')
 
-    # POST - expect JSON with 'cart' and 'customer' fields
     try:
         payload = json.loads(request.body.decode('utf-8'))
     except Exception:
@@ -269,54 +280,45 @@ def checkout_success(request):
 
 @login_required
 @require_POST
-def cart_sync(request):
-    """Synchronize the browser cart (JSON) into the DB `user_cart` table for the
-    authenticated user. Expects JSON: { cart: [ {id, title?, price?, qty}, ... ] }
+def sync_cart(request):
+    # Expect only POST requests here — handle POST payload and sync to DB.
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            cart_data = data.get('cart', [])
+            logger.info('sync_cart called for user=%s with %s items', getattr(request.user, 'id', None), len(cart_data))
 
-    This replaces the user's current cart entries with the provided list. Uses the
-    `qty` column in the DB (one row per product, with qty set accordingly).
-    """
-    import json
-    try:
-        payload = json.loads(request.body.decode('utf-8'))
-    except Exception:
-        return JsonResponse({'ok': False, 'error': 'invalid-json'}, status=400)
+            if request.user.is_authenticated:
+                # Clear existing cart items for the user
+                UserCart.objects.filter(user=request.user).delete()
 
-    items = payload.get('cart', [])
-    # Basic validation
-    if not isinstance(items, list):
-        return JsonResponse({'ok': False, 'error': 'invalid-cart'}, status=400)
+                # Add new cart items
+                for item in cart_data:
+                    UserCart.objects.update_or_create(
+                        user=request.user,
+                        product_id=item.get('id'),
+                        defaults={
+                            'product_price': int(float(item.get('price', 0))),
+                            'qty': item.get('qty', 1)
+                        }
+                    )
+                return JsonResponse({'status': 'Success', 'message': 'Cart synchronized successfully.'})
+            return JsonResponse({'status': 'guest', 'message': 'Saved locally only'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
-    from .models import UserCart
-    try:
-        # Delete existing rows for the user
-        UserCart.objects.filter(user=request.user).delete()
-        objs = []
-        for it in items:
-            try:
-                pid = int(it.get('id'))
-                qty = int(it.get('qty', 1))
-                price = int(float(it.get('price', 0)))
-            except Exception:
-                continue
-            objs.append(UserCart(user=request.user, product_id=pid, product_price=price, qty=qty))
-        if objs:
-            UserCart.objects.bulk_create(objs)
-        return JsonResponse({'ok': True})
-    except Exception as e:
-        return JsonResponse({'ok': False, 'error': str(e)}, status=500)
+    # If we reach here something unexpected occurred — return method not allowed.
+    return JsonResponse({'status': 'failed'}, status=405)
 
 
 @login_required
 def cart_get(request):
-    """Return the authenticated user's cart as JSON by aggregating per product using qty."""
-    from .models import UserCart, UserProduct
-    from django.db.models import Sum, Max
     try:
         # Group by product_id and sum qty
         qs = UserCart.objects.filter(user=request.user).values('product_id').annotate(qty=Sum('qty'), price=Max('product_price'))
         items = []
         for row in qs:
+            user = request.user
             pid = row['product_id']
             qty = int(row['qty'])
             price = float(row['price'] or 0)
@@ -327,11 +329,10 @@ def cart_get(request):
                 price = float(prod.product_price)
             except Exception:
                 pass
-            items.append({'id': pid, 'title': title, 'price': price, 'qty': qty})
+            items.append({'id': pid, 'user': user, 'title': title, 'price': price, 'qty': qty})
         total = sum(i['price'] * i['qty'] for i in items)
         return JsonResponse({'ok': True, 'cart': items, 'total': total})
     except Exception as e:
         return JsonResponse({'ok': False, 'error': str(e)}, status=500)
-
 
 

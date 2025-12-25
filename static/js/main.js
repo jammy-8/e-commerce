@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', ()=>{
-  const cartKey = 'myshop_cart_v1'
+  const cartKey = 'myshop_cart'
   const cartBtn = document.getElementById('cart-btn')
   const cartModal = document.getElementById('cart-modal')
   const closeCart = document.getElementById('close-cart')
@@ -43,7 +43,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   function closeNav(){
     if(!navToggle || !navMenu) return
-    console.log('[NAV] closeNav called')
     navToggle.classList.remove('open')
     navToggle.setAttribute('aria-expanded','false')
     // start closing animation
@@ -79,104 +78,24 @@ document.addEventListener('DOMContentLoaded', ()=>{
     navToggle.dataset.navInited = 'true'
   }
 
-  // indicate whether we're showing/storing the cart locally or using the server
-  let cartSource = 'local'
+    const dialog = document.getElementById('myDialog');
+    const closeBtn = document.getElementById('closeDialogBtn');
+    const openBtn = document.querySelectorAll('#openDialogBtn');
 
-  function getCSRF(){ const v = document.cookie.match('(^|;)\\s*csrftoken\\s*=\\s*([^;]+)'); return v ? v.pop() : '' }
+    openBtn.forEach(btn => {
+      btn.addEventListener('click', () => {
+        dialog.showModal();
+      });
+    });
 
-  function loadCart(){
-    try{ return JSON.parse(localStorage.getItem(cartKey))||[] }catch(e){return[]}
-  }
-  function saveCart(cart){ localStorage.setItem(cartKey, JSON.stringify(cart)); renderCartFromList(cart) }
+    closeBtn.addEventListener('click', () => { dialog.close(); });
 
-  function addToCart(id, title, price){
-    // local update
-    const cart = loadCart()
-    const found = cart.find(i=>i.id===id)
-    if(found){ found.qty += 1 } else { cart.push({id,title,price,qty:1}) }
-    saveCart(cart)
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) {
+        dialog.close();
+      }
+    });
 
-    // if we're using server-backed cart, push the full cart to server
-    if(cartSource === 'server'){
-      fetch('/api/cart/sync/', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRF() }, body: JSON.stringify({cart}) }).catch(()=>{})
-    }
-  }
-
-  async function removeFromCart(id){
-    if(cartSource === 'server'){
-      try{
-        const res = await fetch('/api/cart/')
-        if(!res.ok) return
-        const data = await res.json()
-        const newCart = data.cart.filter(i=>String(i.id)!==String(id))
-        await fetch('/api/cart/sync/', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRF() }, body: JSON.stringify({cart: newCart}) })
-        renderCartFromList(newCart)
-      }catch(e){ console.error(e) }
-    } else {
-      const cart = loadCart().filter(i=>i.id!==id); saveCart(cart)
-    }
-  }
-
-  function clearCart(){ localStorage.removeItem(cartKey); renderCart(); if(cartSource === 'server'){ fetch('/api/cart/sync/', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRF() }, body: JSON.stringify({cart: []}) }).catch(()=>{}) } }
-
-  function renderCartFromList(cart){
-    if(!cartItemsEl || !cartCountEl || !cartTotalEl) return
-    cartItemsEl.innerHTML = ''
-    let total = 0
-    cart.forEach(item=>{
-      total += item.price * item.qty
-      const li = document.createElement('li')
-      li.innerHTML = `<span>${item.title} × ${item.qty}</span><button class=\"btn\" data-remove=\"${item.id}\">$${(item.price*item.qty).toFixed(2)}</button>`
-      cartItemsEl.appendChild(li)
-    })
-    cartCountEl.textContent = cart.reduce((s,i)=>s+i.qty,0)
-    cartTotalEl.textContent = total.toFixed(2)
-  }
-
-  function renderCart(){ renderCartFromList(loadCart()) }
-
-  // Attempt to sync cart to server (works only when the user is authenticated)
-  (function trySyncCart(){
-    const cart = loadCart()
-    if(!cart || !cart.length) return
-    // send but don't block UI
-    try{
-      fetch('/api/cart/sync/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': getCSRF()
-        },
-        body: JSON.stringify({cart})
-      }).catch(()=>{})
-    }catch(e){/* ignore */}
-  })();
-
-  // product buttons
-  document.querySelectorAll('.product').forEach(prod => {
-    const btn = prod.querySelector('.add-to-cart')
-    btn.addEventListener('click', ()=>{
-      const id = prod.dataset.id
-      const price = parseFloat(prod.dataset.price)
-      const title = prod.querySelector('h3').textContent.trim()
-      addToCart(id, title, price)
-    })
-  })
-
-  // open/close
-  if (cartBtn) cartBtn.addEventListener('click', ()=>{ if (cartModal) { cartModal.classList.remove('hidden'); cartModal.setAttribute('aria-hidden','false') } })
-  if (closeCart) closeCart.addEventListener('click', ()=>{ if (cartModal) { cartModal.classList.add('hidden'); cartModal.setAttribute('aria-hidden','true') } })
-  if (clearCartBtn) clearCartBtn.addEventListener('click', ()=>{ clearCart() })
-
-  // Checkout button in the cart modal should open the checkout page
-  const checkoutBtn = document.getElementById('checkout')
-  if (checkoutBtn) checkoutBtn.addEventListener('click', ()=>{ window.location.href = '/checkout/' })
-
-  // remove item by clicking price button
-  cartItemsEl.addEventListener('click', e=>{
-    const removeId = e.target.dataset.remove
-    if(removeId) removeFromCart(removeId)
-  })
 
 async function includeHTML() {
   document.querySelectorAll('[data-include]').forEach(async el => {
@@ -226,15 +145,92 @@ function initNavbar(root = document) {
 // initialize
 includeHTML();
 initNavbar();
-renderCart();
 
+  // Navbar cart behavior: ensure clicking the navbar cart goes to the checkout page
+  (function(){
+    const cartControl = document.getElementById('cart-btn');
+    if(!cartControl) return;
+    // If it's an actual <button> (legacy), redirect explicitly. If it's an <a>, default navigation applies.
+    if(cartControl.tagName === 'BUTTON'){
+      cartControl.addEventListener('click', ()=>{ window.location.href = '/checkout/'; });
+    }
+  })();
 
+  // Checkout: render cart from localStorage and submit to `/checkout/` using the same cart format
+  (function checkoutIntegration(){
+    const itemsEl = document.getElementById('checkout-items');
+    const totalEl = document.getElementById('checkout-total');
+    if(!itemsEl || !totalEl) return; // not on checkout page
 
-  const form = loginWrapper.querySelector('form');
+    function loadLocalCart(){
+      try{ return JSON.parse(localStorage.getItem('myshop_cart'))||[] }catch(e){ return [] }
+    }
+
+    function render(){
+      const cart = loadLocalCart();
+      itemsEl.innerHTML = '';
+      let total = 0;
+      cart.forEach(it=>{
+        const li = document.createElement('li');
+        li.textContent = `${it.title || 'Item'} × ${it.qty} — $${(parseFloat(it.price)||0*it.qty).toFixed(2)}`;
+        itemsEl.appendChild(li);
+        total += (parseFloat(it.price)||0) * (parseInt(it.qty)||0);
+      });
+      totalEl.textContent = total.toFixed(2);
+      return {cart, total};
+    }
+
+    // Re-render when storage changes (other tabs) and after local updates
+    window.addEventListener('storage', (e)=>{ if(e.key === 'myshop_cart') render(); });
+    render();
+
+    const form = document.getElementById('checkout-form');
+    const msg = document.getElementById('checkout-msg');
+    if(!form) return;
+
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      msg.textContent = '';
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const address = document.getElementById('address').value.trim();
+      const city = document.getElementById('city').value.trim();
+      const postcode = document.getElementById('postcode').value.trim();
+      const country = document.getElementById('country').value.trim();
+
+      const current = render();
+      if(!current.cart || !current.cart.length){ msg.textContent = 'Your cart is empty.'; return }
+      if(!name || !email || !address){ msg.textContent = 'Please provide name, email and address.'; return }
+
+      const payload = { cart: current.cart, customer: {name, email, phone, address, city, postcode, country} };
+
+      msg.textContent = 'Placing order...';
+      try{
+        const res = await fetch('/checkout/', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': (document.cookie.match('(^|;)\\s*csrftoken\\s*=\\s*([^;]+)')||[]).pop() || '' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if(data.ok){
+          // clear local cart and redirect
+          localStorage.removeItem('myshop_cart');
+          window.location.href = '/checkout/success/';
+        } else {
+          msg.textContent = data.error || data.message || 'Failed to place order.';
+        }
+      }catch(err){
+        msg.textContent = 'Network error while placing order.';
+        console.error(err);
+      }
+    });
+  })();
+
   const userInput = document.getElementById('id_username');
   const passInput = document.getElementById('id_password');
   const popup = document.getElementById('login-error-popup');
-  if(!loginWrapper) return;
 
   // only attach validation on actual login forms that have both username and password inputs
   if(!userInput || !passInput) return;

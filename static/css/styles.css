@@ -4038,6 +4038,8 @@ textarea.form-control-lg {
   color: var(--bs-navbar-brand-color);
   text-decoration: none;
   white-space: nowrap;
+  font-family: 'Helvetica Neue'; 
+  font-style: italic;
 }
 .navbar-brand:hover, .navbar-brand:focus {
   color: var(--bs-navbar-brand-hover-color);
@@ -12239,6 +12241,7 @@ footer {
 
 /* Nav menu */
 .nav-menu {
+  text-align: center;
   display: flex;
   gap: 0.75rem;
   list-style: none;
@@ -12257,7 +12260,10 @@ footer {
 .nav-menu li a:hover {
   background: #067;
   color: #fff;
-  border-radius: 4px;
+  /* border-radius: 4px; */
+  width: 100%;
+  height: 125%;
+  transition: background 0.3s ease-in-out, color 0.3s ease-in-out;
 }
 
 .nav-menu ul {
@@ -12271,7 +12277,7 @@ footer {
 }
 
 .hero {
-  background-color: #067;
+  /* background-color: #067; */
   background-image: url('/static/img/hero.jpg');
   background-size: cover;
   background-position: center;
@@ -12317,18 +12323,31 @@ footer {
   font-weight: 600;
 }
 
-/* Buttons */
-.btn {
-  background: #eee;
-  border: 0;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  cursor: pointer;
+.btn-container {
+  padding-bottom: 1rem;
 }
 
-.btn.primary {
-  background: #067;
+/* Buttons */
+.btn-shop {
+  /* background: #eee; */
+  border: 0;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  text-align: center;
+  outline: 1px black;
+  margin-bottom: 0.75rem;
+  border-radius: 0px;
+  outline: #fa9450 1px solid;
+  color: #fa9450;
+  width: 10%;
+  height: 10%;
+  text-decoration: none;
+}
+
+.btn-shop:hover {
+  background: #fa9450;
   color: #fff;
+  transition: background 0.3s ease-in-out, color 0.3s ease-in-out;
 }
 
 /* Cart modal */
@@ -12436,3 +12455,108 @@ footer {
   color: var(--bs-danger-text-emphasis, #d9534f);
 }
 
+.btn-user {
+  color: #000;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-user:hover {
+  color: #fff;
+  transition: color 0.3s ease-in-out;
+}
+
+.btn-logout {
+  border: 0;
+  color: #000;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+}
+
+.btn-logout:hover {
+  color: #fff;
+  transition: color 0.3s ease-in-out;
+}
+
+.shop-btn {
+  width: 100%;
+  height: 48px;
+  background: #067;
+  color: #fff;
+  border: 1px;
+  text-align: center
+}
+
+.add-to-cart {
+  width: 100%;
+  height: 48px;
+  background: #fa9450;
+  background-position-y: bottom;
+  color: #fff;
+  border: 1px;
+  text-align: center;
+  border-radius: 6px;
+  align-items: center;
+  margin-top: auto;
+}
+
+.add-to-cart:hover {
+  background: #fa9450;
+  color: #fff;
+}
+
+.price {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #067;
+  margin-top: auto;
+}
+
+.grid {
+  margin: 5%;
+}
+
+.product {
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  height: 100%;
+}
+
+.container {
+  margin-bottom: 5%;
+}
+
+.form-label {
+  border-radius: 6px;
+}
+
+.edit-form input, 
+.edit-form textarea {
+  width: 25%;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.list-group input, 
+.list-group textarea {
+  margin-bottom: 5%;
+}
+
+dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+dialog {
+  border: none;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  align-items: center;
+}
+
+.close-btn {
+}
