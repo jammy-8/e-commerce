@@ -26,9 +26,7 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('signup/', views.signup_view, name='signup'),
     path('profile/edit/', views.edit_profile, name='edit_profile'),
-    path('cart/sync/', views.sync_cart, name='sync_cart'),
-    # path('api/cart/', views.cart_get, name='cart_get'),
-    # path('api/cart/sync/', views.sync_cart, name='cart_sync'),
+    path('add/', views.add_to_cart, name='add_to_cart'),
     path('checkout/', views.checkout, name='checkout'),
     path('checkout/success/', views.checkout_success, name='checkout_success'),
 ]

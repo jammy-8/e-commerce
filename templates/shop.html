@@ -5,6 +5,9 @@
 
 {% block content %}
 
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+
   <section class="hero d-flex align-items-center justify-content-center">
     <h1 class="hero-outline display-4 fw-bold">Discover Great Products</h1>
   </section>
@@ -24,21 +27,56 @@
             {% csrf_token %}
             <input type="hidden" name="product_id" value="{{ p.id }}">
             <input type="hidden" name="product_name" value="{{ p.name }}">
-            <input type="hidden" name="product_price" value="{{ p.price }}">
-          <button id="openDialogBtn" class="add-to-cart" >Add to cart</button>
+            <button type="button" class="add-to-cart">Add to cart</button>
+          </form>
         </article>
       {% empty %}
         <p>No products available yet.</p>
       {% endfor %}
-      <dialog id="myDialog" class="myDialog">
-        <div class="dialogBox">
+      <div class="dialogBox justify-content-center align-items-center"></div>
+        <dialog id="myDialog" class="myDialog ">
             <button id="closeDialogBtn" class="close-btn">&times;</button>
             <p>Item Added to your Cart!</p>
-        </div>
-      </dialog>
-    </form>
+        </dialog>
+      </div>
     </div>
 
   </section>
+
+<script>
+  $(document).on('click', '.add-to-cart', function(event) {
+    event.preventDefault(); 
+    const $form = $(this).closest('form');
+    const productId = $form.find('input[name="product_id"]').val();
+    const csrfToken = $form.find('input[name="csrfmiddlewaretoken"]').val();
+    $.ajax({
+      type: 'POST',
+      url: '{% url "add_to_cart" %}',
+      data: {
+        'product_id': productId,
+        'csrfmiddlewaretoken': csrfToken
+      },
+
+      success: function(json) {
+        console.log('Add to cart response:', json);
+        try {
+          const dlg = document.getElementById('myDialog');
+          if (dlg) dlg.showModal();
+        } catch (e) {
+          console.warn('Dialog show failed', e);
+        }
+      },
+      error: function(xhr, status, error) {
+        console.error('Error adding to cart:', error);
+      }
+    });
+  });
+
+  // Close dialog handler
+  $(document).on('click', '#closeDialogBtn', function() {
+    const dlg = document.getElementById('myDialog');
+    if (dlg) dlg.close();
+  });
+</script>
 
 {% endblock %}

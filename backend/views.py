@@ -13,6 +13,7 @@ import time
 from django.http import JsonResponse
 import base64
 from io import BytesIO
+from decimal import Decimal
 
 # Image processing for product images (resize larger images server-side)
 try:
@@ -224,24 +225,38 @@ def custom_404_view(request, exception):
     # Keep this simple — render the existing 404 template with a 404 status.
     return render(request, '404.html', status=404)
 
-
 def add_to_cart(request):
     if request.method == 'POST':
         product_id = request.POST.get('product_id')
-        product_price = request.POST.get('product_price')
 
-        if request.user.is_authenticated:
-            user_cart, created = UserCart.objects.get_or_create(
-                user=request.user,
-                product_id=product_id,
-                defaults={'product_price': product_price, 'qty': 1}
-            )
-            if not created:
-                user_cart.qty += 1
-                user_cart.save()
-                console.log('Updated quantity for product_id:', product_id)
+        if not request.user.is_authenticated:
+            # For AJAX requests return JSON, otherwise redirect to login
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'ok': False, 'error': 'auth-required'}, status=403)
+            return redirect('login')
 
+        # Ensure product exists
+        try:
+            product = UserProduct.objects.get(product_id=product_id)
+        except UserProduct.DoesNotExist:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'ok': False, 'error': 'product-not-found'}, status=404)
+            messages.error(request, 'Product not found.')
             return redirect('/shop')
+
+        user_cart, created = UserCart.objects.get_or_create(
+            user=request.user,
+            product_id=product,
+            defaults={'qty': 1}
+        )
+        if not created:
+            user_cart.qty = (user_cart.qty or 0) + 1
+            user_cart.save()
+
+        # Return JSON for AJAX, otherwise redirect
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'ok': True, 'created': created, 'product_id': str(product_id), 'qty': user_cart.qty})
+        return redirect('/shop')
 
 def checkout(request):
     if request.method == 'GET':
@@ -252,24 +267,48 @@ def checkout(request):
     except Exception:
         return JsonResponse({'ok': False, 'error': 'invalid-json'}, status=400)
 
-    cart = payload.get('cart', [])
-    customer = payload.get('customer', {})
+    cart_items = (
+        UserCart.objects
+       .filter(user=request.user)
+        .select_related('product_id')
+    )
 
-    # Very small validation
-    if not cart or not customer.get('name') or not customer.get('email'):
-        return JsonResponse({'ok': False, 'error': 'missing-fields'}, status=400)
+    if not cart_items.exists():
+        return JsonResponse({'ok': False, 'error': 'empty-cart'}, status=400)
+
+    cart = []
+    total = Decimal('0.00')
+
+    for item in cart_items:
+        product = item.product_id
+        price = Decimal(product.product_price)
+        line_total = price * item.qty
+
+        cart.append({
+            'id': str(product.product_id),
+            'name': product.product_name,
+            'price': float(product.product_price),
+            'qty': item.qty,
+            'line_total': str(line_total),
+        })
+
+        total += line_total
 
     order_id = int(time.time() * 1000)
+
     order = {
         'id': order_id,
+        'customer': {
+            'id': request.user.id,
+            'username': request.user.username,
+        }, 
         'cart': cart,
-        'customer': customer,
-        'total': sum((float(i.get('price', 0)) * int(i.get('qty', 1))) for i in cart)
+        'total': str(total),
     }
 
     request.session['last_order'] = order
 
-    return JsonResponse({'ok': True, 'order_id': order_id})
+    return JsonResponse({'ok': True, 'order_id': order_id, 'total': str(total), 'items': len(cart)})
 
 
 def checkout_success(request):
@@ -286,20 +325,30 @@ def sync_cart(request):
         try:
             data = json.loads(request.body.decode('utf-8'))
             cart_data = data.get('cart', [])
-            logger.info('sync_cart called for user=%s with %s items', getattr(request.user, 'id', None), len(cart_data))
 
             if request.user.is_authenticated:
-                # Clear existing cart items for the user
-                UserCart.objects.filter(user=request.user).delete()
+                # NOTE: Below line would delete all existing cart items for the user.
+                # The user requested deletions to be commented out; uncomment if you want to clear previous cart entries before syncing.
+                # UserCart.objects.filter(user=request.user).delete()
 
                 # Add new cart items
                 for item in cart_data:
+                    pid = item.get('id')
+                    try:
+                        product = UserProduct.objects.get(product_id=pid)
+                    except UserProduct.DoesNotExist:
+                        logger.warning('sync_cart: product not found %s, skipping', pid)
+                        continue
+                    # Normalize qty (best effort) — cart table no longer stores price per-item
+                    try:
+                        qty_val = int(item.get('qty', 1) or 1)
+                    except Exception:
+                        qty_val = 1
                     UserCart.objects.update_or_create(
                         user=request.user,
-                        product_id=item.get('id'),
+                        product_id=product,
                         defaults={
-                            'product_price': int(float(item.get('price', 0))),
-                            'qty': item.get('qty', 1)
+                            'qty': qty_val
                         }
                     )
                 return JsonResponse({'status': 'Success', 'message': 'Cart synchronized successfully.'})
@@ -314,19 +363,23 @@ def sync_cart(request):
 @login_required
 def cart_get(request):
     try:
-        # Group by product_id and sum qty
-        qs = UserCart.objects.filter(user=request.user).values('product_id').annotate(qty=Sum('qty'), price=Max('product_price'))
+        # Group by product_id and sum qty (price comes from the products table)
+        qs = UserCart.objects.filter(user=request.user).values('product_id').annotate(qty=Sum('qty'))
         items = []
         for row in qs:
             user = request.user
             pid = row['product_id']
             qty = int(row['qty'])
-            price = float(row['price'] or 0)
+            price = 0.0
             title = f'Product {pid}'
             try:
                 prod = UserProduct.objects.get(product_id=pid)
                 title = prod.product_name or title
-                price = float(prod.product_price)
+                # product_price on UserProduct may be a string; convert safely
+                try:
+                    price = float(prod.product_price)
+                except Exception:
+                    price = 0.0
             except Exception:
                 pass
             items.append({'id': pid, 'user': user, 'title': title, 'price': price, 'qty': qty})
@@ -334,5 +387,3 @@ def cart_get(request):
         return JsonResponse({'ok': True, 'cart': items, 'total': total})
     except Exception as e:
         return JsonResponse({'ok': False, 'error': str(e)}, status=500)
-
-
