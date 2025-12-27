@@ -84,11 +84,11 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
+        'NAME': 'railway',
         'USER': 'postgres',
         'PASSWORD': 'TaNHYOQlfxFtvHZOQHRcdCVZmVgMLwYz', #'123'
-        'HOST': 'switchback.proxy.rlwy.net', #'localhost'
-        'PORT': '55639',#'5432',
+        'HOST': 'trolley.proxy.rlwy.net', #'localhost'
+        'PORT': '22140',#'5432',
     }
 }
 
