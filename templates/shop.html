@@ -6,13 +6,14 @@
 {% block content %}
 
 
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 
   <section class="hero d-flex align-items-center justify-content-center">
-    <h1 class="hero-outline display-4 fw-bold">Discover Great Products</h1>
+    <h1 class="hero-outline display-4 fw-bold my-4">Discover Great Products</h1>
   </section>
 
-  <section class="products">
+
+  <div class="products">
     <div class="grid">
       {% for p in products %}
         <article class="product" data-id="{{ p.id }}" data-price="{{ p.price }}">
@@ -35,14 +36,11 @@
       {% endfor %}
       <div class="dialogBox justify-content-center align-items-center"></div>
         <dialog id="myDialog" class="myDialog ">
-            <button id="closeDialogBtn" class="close-btn">&times;</button>
             <p>Item Added to your Cart!</p>
+            <button id="closeDialogBtn" class="close-btn"></button>
         </dialog>
       </div>
-    </div>
-
-  </section>
-
+  </div>
 <script>
   $(document).on('click', '.add-to-cart', function(event) {
     event.preventDefault(); 

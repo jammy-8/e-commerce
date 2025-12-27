@@ -23,7 +23,7 @@
         <!-- show cart only for authenticated users -->
         <a href="{% url 'checkout' %}" id="cart-btn" class="cart-btn">Cart</a>
       {% else %}
-        <a href="{% url 'login' %}" class="login-btn me-2">Login</a>
+        <a href="{% url 'login' %}" class="btn-login me-2">Login</a>
       {% endif %}
     </div>
   </div>

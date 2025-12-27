@@ -12175,6 +12175,7 @@ footer {
   padding: 0.5rem 0.75rem;
   border-radius: 6px;
   cursor: pointer;
+  text-decoration: none;
 }
 
 /* Site nav (hamburger) */
@@ -12392,10 +12393,9 @@ footer {
 }
 
 .close-btn {
+  height: 1px;
   background: transparent;
   border: 0;
-  font-size: 1.3rem;
-  float: right;
   cursor: pointer;
 }
 
@@ -12467,7 +12467,7 @@ footer {
   transition: color 0.3s ease-in-out;
 }
 
-.btn-logout {
+.btn-logout, .btn-login {
   border: 0;
   color: #000;
   padding: 0.5rem 0.75rem;
@@ -12476,7 +12476,7 @@ footer {
   text-decoration: none;
 }
 
-.btn-logout:hover {
+.btn-logout:hover, .btn-login:hover {
   color: #fff;
   transition: color 0.3s ease-in-out;
 }
@@ -12541,6 +12541,27 @@ footer {
   padding: 8px;
 }
 
+.signup-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.form-group input, 
+.form-group textarea {
+  width: 100%;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.checkout-grid input, 
+.checkout-grid textarea {
+  width: 25%;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+
 .list-group input, 
 .list-group textarea {
   margin-bottom: 5%;
@@ -12580,4 +12601,17 @@ dialog {
   cursor: pointer;
   align-items: center;
   justify-content: center;
+}
+
+.list-group {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  font-size: 1.25rem;
+}
+
+.summary-total {
+  margin-top: 1rem;
+  font-size: 1.25rem;
+  justify-content: space-between;
 }

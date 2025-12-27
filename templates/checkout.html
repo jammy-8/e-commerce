@@ -10,35 +10,44 @@
       {% csrf_token %}
       <h2>Shipping details</h2>
       <label for="name">Full name</label>
-      <input id="ck-name" name="name" required>
+      <input id="name" name="name" class="chk" required>
 
-      <label for="email">Email</label>
-      <input id="ck-email" name="email" type="email" required>
+      <label for="email">Email (Optional) </label>
+      <input id="email" name="email" type="email" class="chk">
 
-      <label for="phone">Phone</label>
-      <input id="ck-phone" name="phone">
+      <label for="phone">Phone (Optional) </label>
+      <input id="phone" name="phone" class="chk">
 
       <label for="address">Address</label>
-      <input id="ck-address" name="address" required>
+      <input id="address" name="address" class="chk" required>
 
-      <label for="city">City</label>
-      <input id="ck-city" name="city">
-
-      <label for="postcode">Postal code</label>
-      <input id="ck-postcode" name="postcode">
-
-      <label for="country">Country</label>
-      <input id="ck-country" name="country">
-
+      <button type="submit" class="btn btn-primary my-3">Place order</button>
+      <div id="checkout-msg" role="status" aria-live="polite" style="margin-top:12px"></div>
     </form>
+
+
+<form method="post" action="{% url 'clear_cart' %}" style="margin-top: 10px;">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-outline-danger">
+    Clear cart
+  </button>
+</form>
 
     <div class="order-summary">
       <h2>Your order</h2>
-      <ul id="checkout-items"></ul>
-      <div class="summary-total">Total: $<span id="checkout-total">0.00</span></div>
+
+      <ul class="list-group">
+      {% for item in cart_items %}
+        <li>
+          {{ item.qty }} x {{ item.name }} - ${{ item.price|floatformat:2 }}
+        </li>
+        {% empty %}
+        <li>Your cart is empty.</li>
+        {% endfor %}
+      </ul>
     </div>
-      <button type="submit" class="btn btn-primary">Place order</button>
-      <div id="checkout-msg" role="status" aria-live="polite" style="margin-top:12px"></div>
+    <div class="summary-total">Total: ${{ total|floatformat:2 }}</div>
+
   </div>
 </section>
 

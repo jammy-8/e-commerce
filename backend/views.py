@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
-from .models import UserProduct, UserCart
+from .models import UserOrder, UserProduct, UserCart
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from django.db.models import Sum, Max
@@ -225,6 +225,7 @@ def custom_404_view(request, exception):
     # Keep this simple — render the existing 404 template with a 404 status.
     return render(request, '404.html', status=404)
 
+@login_required
 def add_to_cart(request):
     if request.method == 'POST':
         product_id = request.POST.get('product_id')
@@ -258,23 +259,19 @@ def add_to_cart(request):
             return JsonResponse({'ok': True, 'created': created, 'product_id': str(product_id), 'qty': user_cart.qty})
         return redirect('/shop')
 
+@login_required
 def checkout(request):
-    if request.method == 'GET':
-        return render(request, 'checkout.html')
-
-    try:
-        payload = json.loads(request.body.decode('utf-8'))
-    except Exception:
-        return JsonResponse({'ok': False, 'error': 'invalid-json'}, status=400)
-
+        
     cart_items = (
-        UserCart.objects
+    UserCart.objects
        .filter(user=request.user)
         .select_related('product_id')
     )
 
     if not cart_items.exists():
-        return JsonResponse({'ok': False, 'error': 'empty-cart'}, status=400)
+        if request.method == 'POST':
+            return JsonResponse({'ok': False, 'error': 'empty-cart'}, status=400)
+        return render(request, 'checkout.html', {'cart_items': [], 'total': Decimal('0.00')})
 
     cart = []
     total = Decimal('0.00')
@@ -285,7 +282,7 @@ def checkout(request):
         line_total = price * item.qty
 
         cart.append({
-            'id': str(product.product_id),
+            # 'id': str(product.product_id),
             'name': product.product_name,
             'price': float(product.product_price),
             'qty': item.qty,
@@ -294,96 +291,63 @@ def checkout(request):
 
         total += line_total
 
-    order_id = int(time.time() * 1000)
+    if request.method == 'GET':
+        return render(request, 'checkout.html', {
+            'cart_items': cart,
+            'total': total,
+        })
+
+    user_order, created = UserOrder.objects.get_or_create(
+    user=request.user,
+    defaults={
+        'customer_name': request.POST.get('name'),
+        'customer_email': request.POST.get('email') or None,
+        'customer_phone': request.POST.get('phone') or None,
+        'customer_address': request.POST.get('address'),
+        'total': total, 
+        }
+    )
+
+    if not created:
+        user_order.customer_name = request.POST.get('name')
+        user_order.customer_email = request.POST.get('email') or None
+        user_order.customer_phone = request.POST.get('phone') or None
+        user_order.customer_address = request.POST.get('address')
+        user_order.total = total
+        user_order.save()
+
+    order_id = user_order.order_id
 
     order = {
         'id': order_id,
-        'customer': {
-            'id': request.user.id,
-            'username': request.user.username,
-        }, 
+        'customer_name': request.POST.get('name'),
+        'customer_email': request.POST.get('email') or None,
+        'customer_phone': request.POST.get('phone') or None,
+        'customer_address': request.POST.get('address'),
         'cart': cart,
         'total': str(total),
     }
 
-    request.session['last_order'] = order
+    request.session['last_order'] = user_order.order_id
 
-    return JsonResponse({'ok': True, 'order_id': order_id, 'total': str(total), 'items': len(cart)})
+    return redirect('checkout_success')
 
 
 def checkout_success(request):
-    """Simple success page that shows the last order stored in the session."""
     order = request.session.get('last_order')
+
+    if not order:
+        messages.error(request, 'No recent order found in session.')
+        return redirect('index')
+
+    order = UserOrder.objects.get(order_id=order)
     return render(request, 'checkout_success.html', {'order': order})
 
-
-@login_required
-@require_POST
-def sync_cart(request):
-    # Expect only POST requests here — handle POST payload and sync to DB.
+def clear_cart(request):
     if request.method == 'POST':
-        try:
-            data = json.loads(request.body.decode('utf-8'))
-            cart_data = data.get('cart', [])
-
-            if request.user.is_authenticated:
-                # NOTE: Below line would delete all existing cart items for the user.
-                # The user requested deletions to be commented out; uncomment if you want to clear previous cart entries before syncing.
-                # UserCart.objects.filter(user=request.user).delete()
-
-                # Add new cart items
-                for item in cart_data:
-                    pid = item.get('id')
-                    try:
-                        product = UserProduct.objects.get(product_id=pid)
-                    except UserProduct.DoesNotExist:
-                        logger.warning('sync_cart: product not found %s, skipping', pid)
-                        continue
-                    # Normalize qty (best effort) — cart table no longer stores price per-item
-                    try:
-                        qty_val = int(item.get('qty', 1) or 1)
-                    except Exception:
-                        qty_val = 1
-                    UserCart.objects.update_or_create(
-                        user=request.user,
-                        product_id=product,
-                        defaults={
-                            'qty': qty_val
-                        }
-                    )
-                return JsonResponse({'status': 'Success', 'message': 'Cart synchronized successfully.'})
-            return JsonResponse({'status': 'guest', 'message': 'Saved locally only'})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-
-    # If we reach here something unexpected occurred — return method not allowed.
-    return JsonResponse({'status': 'failed'}, status=405)
-
-
-@login_required
-def cart_get(request):
-    try:
-        # Group by product_id and sum qty (price comes from the products table)
-        qs = UserCart.objects.filter(user=request.user).values('product_id').annotate(qty=Sum('qty'))
-        items = []
-        for row in qs:
-            user = request.user
-            pid = row['product_id']
-            qty = int(row['qty'])
-            price = 0.0
-            title = f'Product {pid}'
-            try:
-                prod = UserProduct.objects.get(product_id=pid)
-                title = prod.product_name or title
-                # product_price on UserProduct may be a string; convert safely
-                try:
-                    price = float(prod.product_price)
-                except Exception:
-                    price = 0.0
-            except Exception:
-                pass
-            items.append({'id': pid, 'user': user, 'title': title, 'price': price, 'qty': qty})
-        total = sum(i['price'] * i['qty'] for i in items)
-        return JsonResponse({'ok': True, 'cart': items, 'total': total})
-    except Exception as e:
-        return JsonResponse({'ok': False, 'error': str(e)}, status=500)
+        if request.user.is_authenticated:
+            UserCart.objects.filter(user=request.user).delete()
+            return redirect('checkout')
+        else:
+            return JsonResponse({'ok': False, 'error': 'auth-required'}, status=403)
+    return redirect('checkout')

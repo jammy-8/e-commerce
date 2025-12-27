@@ -1,20 +1,18 @@
 {% load static %}
-<!doctype HTML>
-<html lang="EN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>{% block title %}MyShop{% endblock %}</title>
-  <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}MyShop{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+  </head>
+  <body data-is-auth="{% if request.user.is_authenticated %}true{% else %}false{% endif %}">
+    <header>
+      {% include "components/navbar.html" %}
+    </header>
 
-</head>
-<body data-is-auth="{% if request.user.is_authenticated %}true{% else %}false{% endif %}">
-  <header>
-    {% include "components/navbar.html" %}
-  </header>
-
-    {% block content %}{% endblock %}
-  </main>
+      {% block content %}{% endblock %}
 
   <footer class="bg-dark text-light">
     <div class="text-center">

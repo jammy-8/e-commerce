@@ -3,30 +3,30 @@
 {% block title %}Order received - MyShop{% endblock %}
 
 {% block content %}
-<section class="container">
+<section class="container checkout-success my-4">
   <h1>Thank you! Your order is received ✅</h1>
   {% if order %}
-    <p>Order ID: <strong>{{ order.id }}</strong></p>
+    <p>Order ID: <strong>{{ order.order_id }}</strong></p>
     <h2>Customer</h2>
-    <ul>
-      <li>Name: {{ order.customer.name }}</li>
-      <li>Email: {{ order.customer.email }}</li>
+    <ul class="list-group">
+      <li>Name: {{ order.customer_name }}</li>
+      <li>Email: {{ order.customer_email }}</li>
       {% if order.customer.phone %}<li>Phone: {{ order.customer.phone }}</li>{% endif %}
-      <li>Address: {{ order.customer.address }}{% if order.customer.city %}, {{ order.customer.city }}{% endif %}</li>
+      <li>Address: {{ order.customer_address }}</li>
     </ul>
 
     <h2>Items</h2>
-    <ul>
+    <ul class="list-group">
       {% for item in order.cart %}
-        <li>{{ item.title }} × {{ item.qty }} — ${{ item.price|floatformat:2 }}</li>
+        <li>{{ item.name }} × {{ item.qty }} — ${{ item.price|floatformat:2 }}</li>
       {% endfor %}
     </ul>
 
-    <p><strong>Total:</strong> ${{ order.total|floatformat:2 }}</p>
+    <div class="summary-total"><p><strong>Total:</strong> ${{ order.total|floatformat:2 }}</p></div>
   {% else %}
     <p>We couldn't find your recent order in the session — if you just placed it, it may have expired. If you need help, contact support.</p>
   {% endif %}
 
-  <p><a href="/">Return to shop</a></p>
+  <p><a href="/" class="btn btn-primary">Return to shop</a></p>
 </section>
 {% endblock %}

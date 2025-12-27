@@ -17,12 +17,14 @@
     <div class="mb-3">
       <label for="id_username" class="form-label">Username</label>
       <div class="edit-form">{{ form.username }}</div>
+      {% if form.username.help_text %}
+        <small id="id_username_helptext" class="help_text">{{ form.username.help_text }}</small>
+      {% endif %}
     </div>
     <div class="mb-3">
       <label for="id_email" class="form-label">Email (optional)</label>
       <div class="edit-form">{{ form.email }}</div>
     </div>
-    <hr />
     <div class="mb-3">
       <label for="id_password1" class="form-label">New password</label>
       <div class="edit-form">{{ form.password1 }}</div>
@@ -36,7 +38,6 @@
     <a href="/" class="btn btn-secondary ms-2">Cancel</a>
   </form>
 
-  <hr />
   <h3>Your products</h3>
   {% if products %}
     <ul class="list-group mb-4 border">
