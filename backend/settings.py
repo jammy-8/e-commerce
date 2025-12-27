@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-!uup_y8eiu1nw4f9sg$=7g(2%h(!6d7nvj9pat$!=0o(1z%vo3
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 #localhost", "127.0.0.1
-ALLOWED_HOSTS = ["server-production-8e96.up.railway.app", "switchback.proxy.rlwy.net"]
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -79,6 +79,8 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 # Use PostgreSQL by default with environment-configurable connection values. For quick local
 # development you can set DB_ENGINE to 'django.db.backends.sqlite3' to use the bundled SQLite.
+
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
