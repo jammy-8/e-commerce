@@ -30,6 +30,12 @@ DEBUG = True
 #localhost", "127.0.0.1
 ALLOWED_HOSTS = ["*"]
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://e-commerce-production-e89d.up.railway.app',
+]
+
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 
 # Application definition
 
