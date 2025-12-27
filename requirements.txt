@@ -1,4 +1,7 @@
-bootstrap@5.3.8
-django
+Django==6.0.0
+gunicorn
+whitenoise
+dj-database-url
+python-dotenv
 psycopg2-binary
 Pillow
