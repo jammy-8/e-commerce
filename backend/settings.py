@@ -27,7 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-!uup_y8eiu1nw4f9sg$=7g(2%h(!6d7nvj9pat$!=0o(1z%vo3'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 #localhost", "127.0.0.1
 ALLOWED_HOSTS = ["*"]
 
@@ -89,10 +89,20 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Use PostgreSQL by default with environment-configurable connection values. For quick local
 # development you can set DB_ENGINE to 'django.db.backends.sqlite3' to use the bundled SQLite.
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'postgres',
+#         'USER': 'postgres',
+#         'PASSWORD': '1234',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
+# }
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'd3tnne69jptm7',
         'USER': 'u4inv14ks04319',
         'PASSWORD': 'p4d11d8f3ad3e6dbccd84b8e8c9bcf4278e37edb9f688fba094f33ed6fe2eb4c5',
