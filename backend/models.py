@@ -12,7 +12,7 @@ class UserProduct(models.Model):
 
     class Meta:
         db_table = 'user_products'
-        managed = False
+        managed = True
 
     def __str__(self):
         return f'Product {self.product_id} (user={self.product_user_id})'
@@ -27,7 +27,7 @@ class UserCart(models.Model):
 
     class Meta:
         db_table = 'user_cart'
-        managed = False
+        managed = True
 
     def __str__(self):
         return f'Cart row {self.cart_id}: product {self.product_id}: quantity {self.qty} (user={self.user_id})'   
@@ -47,7 +47,7 @@ class UserOrder(models.Model):
 
     class Meta:
         db_table = 'user_orders'
-        managed = False
+        managed = True
 
     def __str__(self):
         return f'Order {self.order_id} (user={self.user_id})'
