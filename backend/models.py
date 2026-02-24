@@ -39,7 +39,7 @@ class UserOrder(models.Model):
     user = models.ForeignKey(User, db_column='user_id', on_delete=models.CASCADE)
     customer_name = models.CharField(db_column='customer_name', max_length=255)
     customer_email = models.EmailField(db_column='customer_email', null=True, blank=True)
-    customer_phone = models.CharField(db_column='customer_phone', null=True, blank=True)
+    customer_phone = models.CharField(db_column='customer_phone', null=True, blank=True, max_length=20)
     customer_address = models.CharField(db_column='customer_address', max_length=255)
     customer_cart = models.ForeignKey(UserCart, db_column='order_cart', on_delete=models.CASCADE)
     total = models.DecimalField(max_digits=10, decimal_places=2, db_column='total', default=0.00)
