@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 import os
 from pathlib import Path
+import django_heroku
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -92,10 +93,10 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': '1234',
-        'HOST': 'localhost',
+        'NAME': 'd3tnne69jptm7',
+        'USER': 'u4inv14ks04319',
+        'PASSWORD': 'p4d11d8f3ad3e6dbccd84b8e8c9bcf4278e37edb9f688fba094f33ed6fe2eb4c5',
+        'HOST': 'c18qegamsgjut6.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com',
         'PORT': '5432',
     }
 }
@@ -153,5 +154,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [ BASE_DIR / 'static' ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+django_heroku.settings(locals())
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
