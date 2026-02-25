@@ -275,11 +275,11 @@ def checkout(request):
         line_total = price * item.qty
 
         cart.append({
-            # 'id': str(product.product_id),
+            'id': (product.product_id),
             'name': product.product_name,
             'price': float(product.product_price),
             'qty': item.qty,
-            'line_total': str(line_total),
+            'line_total': (line_total),
         })
 
         total += line_total
@@ -298,6 +298,7 @@ def checkout(request):
         'customer_phone': request.POST.get('phone') or None,
         'customer_address': request.POST.get('address'),
         'total': total, 
+        'customer_cart': cart_items.first() if cart_items.exists() else None,
         }
     )
 
