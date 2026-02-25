@@ -8,12 +8,11 @@ from .models import UserOrder, UserProduct, UserCart
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from django.db.models import Sum, Max
-import json
-import time
 from django.http import JsonResponse
 import base64
 from io import BytesIO
 from decimal import Decimal
+from .forms import ProductForm 
 
 # Image processing for product images (resize larger images server-side)
 try:
@@ -57,16 +56,23 @@ def _process_image(binary, max_width=640, max_height=480):
 
 def index(request):
     # Load up to 6 products for the home page (preview / featured)
-    prods = UserProduct.objects.all()[:6]
+    prods = UserProduct.objects.order_by('-product_id')[:6]
     products = []
     for p in prods:
         img = _process_image(p.product_image, max_width=640, max_height=480)
+
+        print("----------------------------------------------")
+        print("RAW IMAGE:" , p.product_image)
+        print("PROCESSED IMAGE:", img)
+        print("----------------------------------------------")
+
         products.append({
             'id': p.product_id,
             'name': p.product_name or f'Product {p.product_id}',
             'price': p.product_price,
-            'image': img,
+            'image': p.product_image,
         })
+
     return render(request, 'index.html', {'products': products})
 
 
@@ -82,7 +88,7 @@ def shop(request):
             'id': p.product_id,
             'name': p.product_name or f'Product {p.product_id}',
             'price': p.product_price,
-            'image': img,
+            'image': p.product_image,
         })
     return render(request, 'shop.html', {'products': products})
 
@@ -154,15 +160,6 @@ class ProfileForm(forms.ModelForm):
                 raise forms.ValidationError('Passwords do not match')
         return cleaned
 
-class ProductForm(forms.ModelForm):
-    # Keep image as a plain FileField (the model stores binary data and is non-editable)
-    product_image = forms.FileField(required=False, label='Image')
-
-    class Meta:
-        model = UserProduct
-        # Edit product_name and product_price; product_image handled separately
-        fields = ['product_name', 'product_price']
-
 @login_required
 def edit_profile(request):
     """Allow a logged-in user to update their username, email and password, and add products."""
@@ -189,11 +186,7 @@ def edit_profile(request):
             if product_form.is_valid():
                 prod = product_form.save(commit=False)
                 prod.product_user = user
-                # Handle uploaded image file
-                uploaded = request.FILES.get('product_image')
-                if uploaded:
-                    prod.product_image = uploaded.read()
-                # Some existing tables may not have an auto-incrementing primary key; set one if needed
+
                 from django.db.models import Max
                 max_id = UserProduct.objects.aggregate(Max('product_id'))['product_id__max'] or 0
                 prod.product_id = max_id + 1

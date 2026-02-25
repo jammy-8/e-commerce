@@ -15,14 +15,14 @@
   </section>
 
 
-  <div class="products">
+  <section class="products">
     <div class="grid">
       {% for p in products %}
         <article class="product" data-id="{{ p.id }}" data-price="{{ p.price }}">
           {% if p.image %}
-            <img src="{{ p.image }}" alt="{{ p.name }}">
+            <img src="{{ p.image.url }}" alt="{{ p.name }}">
           {% else %}
-            <img src="https://via.placeholder.com/320x200?text={{ p.name|urlencode }}" alt="{{ p.name }}">
+            <p>No image available</p>
           {% endif %}
           <h3>{{ p.name }}</h3>
           <p class="price">${{ p.price }}</p>
@@ -42,7 +42,7 @@
             <button id="closeDialogBtn" class="close-btn"></button>
         </dialog>
       </div>
-  </div>
+  </section>
 <script>
   $(document).on('click', '.add-to-cart', function(event) {
     event.preventDefault(); 
