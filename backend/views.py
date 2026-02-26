@@ -6,13 +6,14 @@ from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from .models import UserOrder, UserProduct, UserCart
 from django.views.decorators.http import require_POST
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.db.models import Sum, Max
 from django.http import JsonResponse
 import base64
 from io import BytesIO
 from decimal import Decimal
 from .forms import ProductForm 
+from django.shortcuts import get_object_or_404
 
 # Image processing for product images (resize larger images server-side)
 try:
@@ -59,12 +60,6 @@ def index(request):
     prods = UserProduct.objects.order_by('-product_id')[:6]
     products = []
     for p in prods:
-        img = _process_image(p.product_image, max_width=640, max_height=480)
-
-        print("----------------------------------------------")
-        print("RAW IMAGE:" , p.product_image)
-        print("PROCESSED IMAGE:", img)
-        print("----------------------------------------------")
 
         products.append({
             'id': p.product_id,
@@ -74,8 +69,6 @@ def index(request):
         })
 
     return render(request, 'index.html', {'products': products})
-
-
 
 
 def shop(request):
@@ -92,6 +85,10 @@ def shop(request):
         })
     return render(request, 'shop.html', {'products': products})
 
+def product_image(request, product_id):
+    product = get_object_or_404(UserProduct, product_id=product_id)
+
+    return HttpResponse(product.product_image, content_type='image/jpeg')
 
 def login_view(request):
     if request.user.is_authenticated:
@@ -186,7 +183,9 @@ def edit_profile(request):
             if product_form.is_valid():
                 prod = product_form.save(commit=False)
                 prod.product_user = user
-
+                image_file = request.FILES['product_image']
+                prod.product_image = image_file.read()
+                prod.product_image_type = image_file.content_type
                 from django.db.models import Max
                 max_id = UserProduct.objects.aggregate(Max('product_id'))['product_id__max'] or 0
                 prod.product_id = max_id + 1

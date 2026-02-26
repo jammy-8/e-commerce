@@ -8,7 +8,8 @@ class UserProduct(models.Model):
     product_id = models.AutoField(primary_key=True, db_column='product_id')
     product_user = models.ForeignKey(User, db_column='product_user', on_delete=models.CASCADE)
     product_price = models.DecimalField(max_digits=10, decimal_places=2, db_column='product_price')
-    product_image = models.ImageField(db_column='product_image', upload_to='products/')
+    product_image = models.BinaryField(blank=True, null=True)
+    product_image_type = models.CharField(max_length=100, null=True, blank=True)
     product_name = models.CharField(max_length=255, db_column='product_name')
 
     class Meta:

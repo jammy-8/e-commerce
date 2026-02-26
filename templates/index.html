@@ -16,7 +16,7 @@
         <div class="col-md-4 mb-3">
           <article class="product text-center" data-id="{{ p.id }}">
             {% if p.image %}
-              <img src="{{ p.image.url }}" alt="{{ p.name }}" class="img-fluid">
+              <img src="{% url 'product_image' p.id %}" class="img-fluid">
             {% else %}
               <p>No image available</p>
             {% endif %}

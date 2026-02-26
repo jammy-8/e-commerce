@@ -32,6 +32,7 @@ urlpatterns = [
     path('clear/', views.clear_cart, name='clear_cart'),
     path('checkout/', views.checkout, name='checkout'),
     path('checkout/success/', views.checkout_success, name='checkout_success'),
+    path('product_image/<int:product_id>/', views.product_image, name='product_image'),
 ]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Custom error handlers
